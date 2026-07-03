@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uber — Data & Consent Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0A0A;
+    --white:#FFFFFF;
+    --paper:#F3F1EC;
+    --teal:#0E7C86;
+    --teal-tint:#E4F1F1;
+    --teal-deep:#0A5A62;
+    --green:#1E8E5A;
+    --gray-1:#6B7078;
+    --gray-2:#9BA0A6;
+    --gray-3:#E4E5E7;
+    --gray-4:#F5F5F6;
+    --danger:#B3261E;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',sans-serif;
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(10,10,10,0.06) 1px, transparent 0);
+    background-size:22px 22px;
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 20px 60px;
+  }
+
+  /* ---- Header / rail ---- */
+  .rail{
+    width:100%;
+    max-width:1180px;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin-bottom:36px;
+    flex-wrap:wrap;
+    gap:16px;
+  }
+  .rail-title{max-width:640px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .rail-title h1{
+    font-size:26px;
+    font-weight:800;
+    margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .rail-title p{
+    margin:0;
+    font-size:13.5px;
+    color:var(--gray-1);
+    line-height:1.5;
+  }
+  .flow-legend{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    max-width:420px;
+  }
+  .flow-legend span{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    padding:5px 8px;
+    border-radius:6px;
+    background:var(--white);
+    border:1px solid var(--gray-3);
+    color:var(--gray-1);
+  }
+  .flow-legend span.active{
+    background:var(--ink);
+    color:var(--white);
+    border-color:var(--ink);
+  }
+
+  /* ---- Stage: phone + side notes ---- */
+  .stage{
+    width:100%;
+    max-width:1180px;
+    display:grid;
+    grid-template-columns:260px 1fr 280px;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:980px){
+    .stage{grid-template-columns:1fr;}
+    .side{display:none;}
+  }
+
+  .side{
+    background:var(--white);
+    border:1px solid var(--gray-3);
+    border-radius:16px;
+    padding:18px;
+    position:sticky;
+    top:40px;
+  }
+  .side h3{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--gray-1);
+    margin:0 0 12px;
+    font-weight:700;
+  }
+  .side-item{
+    display:flex;
+    gap:10px;
+    padding:9px 0;
+    border-bottom:1px solid var(--gray-4);
+    font-size:12.5px;
+    align-items:flex-start;
+  }
+  .side-item:last-child{border-bottom:none;}
+  .side-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--gray-2);
+    width:16px;
+    flex:none;
+    padding-top:1px;
+  }
+  .side-item.current .side-num{color:var(--teal);font-weight:700;}
+  .side-item.current{color:var(--ink);font-weight:600;}
+  .side-item:not(.current){color:var(--gray-1);}
+
+  .notes-box{margin-top:18px;}
+  .notes-box p{font-size:11.5px;color:var(--gray-1);line-height:1.6;margin:0;}
+
+  /* ---- Phone frame ---- */
+  .phone-wrap{display:flex;flex-direction:column;align-items:center;}
+  .phone{
+    width:375px;
+    height:812px;
+    background:var(--ink);
+    border-radius:46px;
+    padding:14px;
+    box-shadow:0 30px 60px -20px rgba(10,10,10,.35), 0 0 0 1px rgba(10,10,10,.08);
+    position:relative;
+  }
+  .phone::before{
+    content:"";
+    position:absolute;
+    top:14px; left:50%; transform:translateX(-50%);
+    width:120px; height:26px;
+    background:var(--ink);
+    border-radius:0 0 16px 16px;
+    z-index:5;
+  }
+  .screen-area{
+    width:100%; height:100%;
+    background:var(--white);
+    border-radius:32px;
+    overflow:hidden;
+    position:relative;
+  }
+  .statusbar{
+    height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 26px 0 22px;
+    font-size:13px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+  }
+  .screen{
+    position:absolute;
+    inset:0;
+    top:46px;
+    background:var(--white);
+    display:none;
+    flex-direction:column;
+    animation:fadein .25s ease;
+  }
+  .screen.show{display:flex;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .scr-body{flex:1;overflow-y:auto;padding:22px 22px 100px;}
+  .scr-body::-webkit-scrollbar{width:0;}
+
+  .topnav{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 18px 4px;
+  }
+  .back-btn{
+    width:34px;height:34px;border-radius:50%;
+    background:var(--gray-4);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;flex:none;
+  }
+  .back-btn svg{width:16px;height:16px;}
+
+  h2.scr-title{font-size:22px;font-weight:800;margin:4px 0 6px;letter-spacing:-.01em;}
+  p.scr-sub{font-size:13.5px;color:var(--gray-1);line-height:1.55;margin:0 0 22px;}
+
+  .btn{
+    display:block;width:100%;text-align:center;
+    padding:15px 18px;border-radius:14px;
+    font-size:15px;font-weight:700;
+    border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active{transform:scale(.98);}
+  .btn-black{background:var(--ink);color:var(--white);}
+  .btn-teal{background:var(--teal);color:var(--white);}
+  .btn-ghost{background:var(--gray-4);color:var(--ink);}
+  .btn-footer{
+    position:absolute;bottom:0;left:0;right:0;
+    padding:16px 22px 22px;
+    background:linear-gradient(to top, white 60%, rgba(255,255,255,0));
+  }
+
+  .field{
+    border:1.5px solid var(--gray-3);
+    border-radius:14px;
+    padding:15px 16px;
+    font-size:15px;
+    display:flex;align-items:center;gap:8px;
+    margin-bottom:14px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .field .prefix{color:var(--gray-1);font-weight:600;border-right:1px solid var(--gray-3);padding-right:8px;}
+
+  .otp-row{display:flex;gap:8px;margin-bottom:26px;}
+  .otp-box{
+    width:44px;height:52px;border:1.5px solid var(--gray-3);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:600;font-size:18px;
+    background:var(--gray-4);color:var(--ink);
+  }
+
+  /* consent cards */
+  .section-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--gray-1); font-weight:600;
+    margin:20px 0 10px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .section-label:first-child{margin-top:0;}
+  .card{
+    border:1px solid var(--gray-3);
+    border-radius:16px;
+    padding:14px;
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    margin-bottom:10px;
+    background:var(--white);
+  }
+  .card.locked{background:var(--gray-4);border-color:var(--gray-4);}
+  .card .icon-badge{
+    width:36px;height:36px;border-radius:10px;
+    background:var(--teal-tint);color:var(--teal-deep);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .card.locked .icon-badge{background:#E9E9EA;color:var(--gray-1);}
+  .card .txt{flex:1;}
+  .card .txt .t{font-size:14px;font-weight:700;margin-bottom:3px;}
+  .card .txt .d{font-size:12px;color:var(--gray-1);line-height:1.45;}
+  .lock-mark{color:var(--gray-2);flex:none;}
+
+  /* toggle */
+  .toggle{
+    width:44px;height:26px;border-radius:14px;
+    background:var(--gray-3);
+    position:relative;flex:none;cursor:pointer;
+    transition:background .2s ease;
+  }
+  .toggle.on{background:var(--teal);}
+  .toggle .knob{
+    position:absolute;top:3px;left:3px;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--white);
+    box-shadow:0 1px 3px rgba(0,0,0,.25);
+    transition:transform .2s ease;
+  }
+  .toggle.on .knob{transform:translateX(18px);}
+
+  .link-row{
+    font-size:12.5px;color:var(--gray-1);text-decoration:underline;
+    margin:10px 0 6px;cursor:pointer;
+  }
+
+  .status-card{
+    background:var(--teal-tint);
+    border-radius:16px;
+    padding:16px;
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:18px;
+  }
+  .status-card .dot-badge{
+    width:38px;height:38px;border-radius:50%;background:var(--green);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .status-card .t{font-size:13.5px;font-weight:700;}
+  .status-card .s{font-size:11.5px;color:var(--gray-1);}
+
+  .menu-row{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 4px;border-bottom:1px solid var(--gray-4);cursor:pointer;
+  }
+  .menu-row:last-child{border-bottom:none;}
+  .menu-row .icon-badge{
+    width:38px;height:38px;border-radius:11px;background:var(--gray-4);color:var(--ink);
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .menu-row .mid{flex:1;}
+  .menu-row .mid .t{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .menu-row .mid .d{font-size:11.5px;color:var(--gray-1);margin-top:2px;}
+  .badge-new{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;}
+  .chev{color:var(--gray-2);flex:none;}
+
+  .profile-head{
+    display:flex;align-items:center;gap:14px;padding:6px 4px 20px;
+    border-bottom:1px solid var(--gray-4);margin-bottom:6px;
+  }
+  .avatar{
+    width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--white);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:none;
+  }
+
+  .center-flow{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding-top:60px;
+  }
+  .big-icon{
+    width:78px;height:78px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:26px;
+  }
+  .big-icon.teal{background:var(--teal-tint);color:var(--teal-deep);}
+
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;
+    background:var(--gray-4);color:var(--gray-1);
+    padding:3px 7px;border-radius:6px;
+  }
+
+  .checklist-row{
+    display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-4);
+  }
+  .checklist-row:last-child{border-bottom:none;}
+  .check-mark{
+    width:22px;height:22px;border-radius:50%;background:var(--teal);color:white;
+    display:flex;align-items:center;justify-content:center;flex:none;
+  }
+
+  .home-map{
+    flex:1;background:
+      linear-gradient(180deg, rgba(14,124,134,.08), rgba(14,124,134,.02)),
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(10,10,10,.05) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(10,10,10,.05) 28px);
+    background-color:#EFEFEC;
+    position:relative;
+  }
+  .search-pill{
+    position:absolute;top:16px;left:22px;right:22px;
+    background:var(--white);border-radius:14px;padding:14px 16px;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);
+    font-size:14px;color:var(--gray-1);font-weight:600;
+    display:flex;align-items:center;gap:10px;
+  }
+  .avatar-sm{
+    position:absolute;top:16px;left:22px;
+    width:0;height:0;
+  }
+  .home-top{
+    display:flex;align-items:center;gap:10px;padding:16px 22px 0;
+  }
+  .avatar-mini{
+    width:38px;height:38px;border-radius:50%;background:var(--ink);color:white;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;cursor:pointer;flex:none;
+  }
+  .search-bar{
+    flex:1;background:var(--white);border-radius:14px;padding:13px 16px;
+    box-shadow:0 6px 20px rgba(0,0,0,.08);font-size:14px;color:var(--gray-1);font-weight:600;
+  }
+  .sheet{
+    background:var(--white);border-radius:22px 22px 0 0;
+    box-shadow:0 -8px 24px rgba(0,0,0,.08);
+    padding:18px 22px 26px;
+  }
+  .sheet .t{font-size:13px;font-weight:700;color:var(--gray-1);margin-bottom:10px;}
+  .dest-row{display:flex;align-items:center;gap:12px;padding:9px 0;font-size:14px;font-weight:600;}
+  .dest-row .icon-badge{width:32px;height:32px;border-radius:9px;background:var(--gray-4);display:flex;align-items:center;justify-content:center;flex:none;}
+
+  .footer-microcopy{font-size:11px;color:var(--gray-2);line-height:1.5;margin-top:14px;}
+
+  .retain-tag{
+    font-family:'JetBrains Mono',monospace;font-size:9.5px;
+    background:var(--gray-4);color:var(--gray-1);padding:3px 6px;border-radius:5px;
+    margin-top:6px;display:inline-block;
+  }
+
+  .toast{
+    position:absolute;bottom:96px;left:22px;right:22px;
+    background:var(--ink);color:white;padding:12px 16px;border-radius:12px;
+    font-size:12.5px;font-weight:600;text-align:center;
+    opacity:0;pointer-events:none;transform:translateY(8px);
+    transition:all .25s ease;z-index:20;
+  }
+  .toast.show{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="rail">
+  <div class="rail-title">
+    <div class="eyebrow"><span class="dot"></span>CLICKABLE PROTOTYPE — HAPPY PATH</div>
+    <h1>Uber · Data &amp; Consent Experience</h1>
+    <p>Signup with layered, purpose-specific consent → self-serve Privacy Center → data access request. Tap through the phone to walk the full flow.</p>
+  </div>
+  <div class="flow-legend" id="legend"></div>
+</div>
+
+<div class="stage">
+  <!-- LEFT: screen list -->
+  <div class="side">
+    <h3>Screens</h3>
+    <div id="screenList"></div>
+    <div class="notes-box">
+      <p>This is a fully working prototype — no design tool needed. Every button below is live. Use it directly as your submission, or as a pixel-accurate reference to rebuild in Figma.</p>
+    </div>
+  </div>
+
+  <!-- CENTER: phone -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen-area" id="screenArea">
+        <div class="statusbar">
+          <span>9:41</span>
+          <span>●●● 5G 100%</span>
+        </div>
+
+        <!-- SCREEN 1: SIGN UP -->
+        <div class="screen show" data-screen="1">
+          <div class="scr-body" style="padding-top:50px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:var(--ink);color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;margin-bottom:34px;">U</div>
+            <h2 class="scr-title">Get moving with Uber</h2>
+            <p class="scr-sub">Enter your mobile number to get started.</p>
+            <div class="field"><span class="prefix">+91</span><span>98XXX XXXXX</span></div>
+            <div class="footer-microcopy">By continuing, you may be asked to review how we use your data on the next screens.</div>
+          </div>
+          <div class="btn-footer"><button class="btn btn-black" onclick="go(2)">Continue</button></div>
+        </div>
+
+        <!-- SCREEN 2: OTP -->
+        <div class="screen" data-screen="2">
+          <div class="topnav"><div class="back-btn" onclick="go(1)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <h2 class="scr-title">Verify your number</h2>
+            <p class="scr-sub">Enter the 6-digit code sent to +91 98XXX XXXXX.</p>
+            <div class="otp-row">
+              <div class="otp-box">4</div><div class="otp-box">2</div><div class="otp-box">8</div>
+              <div class="otp-box">1</div><div class="otp-box">9</div><div class="otp-box">6</div>
+            </div>
+            <div class="link-row">Resend code</div>
+          </div>
+          <div class="btn-footer"><button class="btn btn-black" onclick="go(3)">Verify</button></div>
+        </div>
+
+        <!-- SCREEN 3: CONSENT -->
+        <div class="screen" data-screen="3">
+          <div class="scr-body" style="padding-top:26px;">
+            <div class="eyebrow" style="margin-bottom:14px;">🔒&nbsp; YOUR DATA, YOUR CHOICE</div>
+            <h2 class="scr-title" style="font-size:20px;">Here's what we need — and what's optional</h2>
+            <p class="scr-sub">You can change any of this anytime in Privacy Center.</p>
+
+            <div class="section-label">Needed for your ride</div>
+            <div class="card locked">
+              <div class="icon-badge">📍</div>
+              <div class="txt"><div class="t">Location while using the app</div><div class="d">To match you with nearby drivers and share your live trip.</div></div>
+              <div class="lock-mark">🔒</div>
+            </div>
+            <div class="card locked">
+              <div class="icon-badge">💳</div>
+              <div class="txt"><div class="t">Trip &amp; payment details</div><div class="d">To process your ride and send a receipt.</div></div>
+              <div class="lock-mark">🔒</div>
+            </div>
+
+            <div class="section-label">Optional — you choose</div>
+            <div class="card">
+              <div class="icon-badge">👪</div>
+              <div class="txt"><div class="t">Share live trip status with emergency contacts</div><div class="d">Off by default only if you turn it off.</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">📣</div>
+              <div class="txt"><div class="t">Personalised offers &amp; marketing</div><div class="d">Uber may message you with tailored offers.</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">🛡️</div>
+              <div class="txt"><div class="t">Share trip data with insurance partner</div><div class="d">Needed only if you buy optional ride insurance.</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">📊</div>
+              <div class="txt"><div class="t">Use ride history for ads elsewhere</div><div class="d">Personalises ads you see on other apps &amp; sites.</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="link-row">Read the full Privacy Notice</div>
+          </div>
+          <div class="btn-footer"><button class="btn btn-teal" onclick="go(4)">Confirm my choices</button></div>
+        </div>
+
+        <!-- SCREEN 4: CONFIRMED -->
+        <div class="screen" data-screen="4">
+          <div class="scr-body center-flow">
+            <div class="big-icon teal" style="font-size:34px;">✓</div>
+            <h2 class="scr-title">You're all set</h2>
+            <p class="scr-sub">We've saved your choices. Review or change them anytime from Profile → Privacy Center.</p>
+          </div>
+          <div class="btn-footer"><button class="btn btn-black" onclick="go(5)">Start riding</button></div>
+        </div>
+
+        <!-- SCREEN 5: HOME -->
+        <div class="screen" data-screen="5" style="padding:0;">
+          <div class="home-top">
+            <div class="avatar-mini" onclick="go(6)">PR</div>
+            <div class="search-bar">Where to?</div>
+          </div>
+          <div class="home-map"></div>
+          <div class="sheet">
+            <div class="t">Recent</div>
+            <div class="dest-row"><div class="icon-badge">🏠</div>Home — Indiranagar</div>
+            <div class="dest-row"><div class="icon-badge">💼</div>Work — Whitefield</div>
+          </div>
+        </div>
+
+        <!-- SCREEN 6: PROFILE MENU -->
+        <div class="screen" data-screen="6">
+          <div class="topnav"><div class="back-btn" onclick="go(5)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <div class="profile-head">
+              <div class="avatar">PR</div>
+              <div><div style="font-weight:800;font-size:16px;">Priya Rao</div><div style="font-size:12.5px;color:var(--gray-1);">+91 98XXX XXXXX</div></div>
+            </div>
+            <div class="menu-row"><div class="icon-badge">💳</div><div class="mid"><div class="t">Payment</div><div class="d">Cards, UPI &amp; wallets</div></div><div class="chev">›</div></div>
+            <div class="menu-row"><div class="icon-badge">🧾</div><div class="mid"><div class="t">Your trips</div><div class="d">History &amp; receipts</div></div><div class="chev">›</div></div>
+            <div class="menu-row" onclick="go(7)"><div class="icon-badge">🔒</div><div class="mid"><div class="t">Privacy Center <span class="badge-new"></span></div><div class="d">Manage your data &amp; consent</div></div><div class="chev">›</div></div>
+            <div class="menu-row"><div class="icon-badge">⚙️</div><div class="mid"><div class="t">Settings</div><div class="d">App preferences</div></div><div class="chev">›</div></div>
+            <div class="menu-row"><div class="icon-badge">❓</div><div class="mid"><div class="t">Help</div><div class="d">Support &amp; FAQs</div></div><div class="chev">›</div></div>
+          </div>
+        </div>
+
+        <!-- SCREEN 7: PRIVACY CENTER -->
+        <div class="screen" data-screen="7">
+          <div class="topnav"><div class="back-btn" onclick="go(6)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <h2 class="scr-title" style="font-size:20px;">Privacy Center</h2>
+            <div class="status-card">
+              <div class="dot-badge">✓</div>
+              <div><div class="t">Your consent is up to date</div><div class="s">Last updated: today</div></div>
+            </div>
+            <div class="menu-row" onclick="go(8)"><div class="icon-badge">📄</div><div class="mid"><div class="t">What data we collect</div><div class="d">See exactly what's stored about you</div></div><div class="chev">›</div></div>
+            <div class="menu-row" onclick="go(9)"><div class="icon-badge">🎛️</div><div class="mid"><div class="t">Manage your consent</div><div class="d">Turn optional data uses on or off</div></div><div class="chev">›</div></div>
+            <div class="menu-row" onclick="go(10)"><div class="icon-badge">⬇️</div><div class="mid"><div class="t">Download my data</div><div class="d">Get a copy of everything we have on you</div></div><div class="chev">›</div></div>
+            <div class="menu-row" style="opacity:.55;cursor:default;"><div class="icon-badge">🗑️</div><div class="mid"><div class="t">Delete my account &amp; data</div><div class="d">Request permanent erasure</div></div><div class="chev">›</div></div>
+          </div>
+        </div>
+
+        <!-- SCREEN 8: DATA COLLECTED -->
+        <div class="screen" data-screen="8">
+          <div class="topnav"><div class="back-btn" onclick="go(7)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <h2 class="scr-title" style="font-size:20px;">What data we collect</h2>
+            <div class="section-label">Location</div>
+            <div class="card"><div class="icon-badge">📍</div><div class="txt"><div class="t">Precise location, in-trip only</div><div class="d">Used to match drivers &amp; share live ETA.</div><span class="retain-tag">retained 90 days</span></div></div>
+            <div class="section-label">Trip history</div>
+            <div class="card"><div class="icon-badge">🧾</div><div class="txt"><div class="t">Pickup, drop-off &amp; route</div><div class="d">Used for receipts and support.</div><span class="retain-tag">retained until account deletion</span></div></div>
+            <div class="section-label">Payment</div>
+            <div class="card"><div class="icon-badge">💳</div><div class="txt"><div class="t">Payment method &amp; fare history</div><div class="d">Tokenised — full card number never stored.</div><span class="retain-tag">retained per RBI mandate</span></div></div>
+            <div class="section-label">Device &amp; app usage</div>
+            <div class="card"><div class="icon-badge">📱</div><div class="txt"><div class="t">App interactions &amp; device type</div><div class="d">Used to improve app performance.</div><span class="retain-tag">retained 180 days</span></div></div>
+          </div>
+        </div>
+
+        <!-- SCREEN 9: MANAGE CONSENT -->
+        <div class="screen" data-screen="9">
+          <div class="topnav"><div class="back-btn" onclick="go(7)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <h2 class="scr-title" style="font-size:20px;">Manage your consent</h2>
+            <p class="scr-sub">Change any optional data use anytime.</p>
+            <div class="card">
+              <div class="icon-badge">👪</div>
+              <div class="txt"><div class="t">Share live trip status with emergency contacts</div></div>
+              <div class="toggle on" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">📣</div>
+              <div class="txt"><div class="t">Personalised offers &amp; marketing</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">🛡️</div>
+              <div class="txt"><div class="t">Share trip data with insurance partner</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+            <div class="card">
+              <div class="icon-badge">📊</div>
+              <div class="txt"><div class="t">Use ride history for ads elsewhere</div></div>
+              <div class="toggle" onclick="this.classList.toggle('on')"><div class="knob"></div></div>
+            </div>
+          </div>
+          <div class="btn-footer"><button class="btn btn-black" onclick="saveConsent()">Save changes</button></div>
+        </div>
+
+        <!-- SCREEN 10: REQUEST DATA -->
+        <div class="screen" data-screen="10">
+          <div class="topnav"><div class="back-btn" onclick="go(7)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0A0A0A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></div></div>
+          <div class="scr-body">
+            <h2 class="scr-title" style="font-size:20px;">Download my data</h2>
+            <p class="scr-sub">We'll prepare a copy of your data as a downloadable file. This usually takes up to 72 hours.</p>
+            <div class="checklist-row"><div class="check-mark">✓</div>Trip history</div>
+            <div class="checklist-row"><div class="check-mark">✓</div>Payment records</div>
+            <div class="checklist-row"><div class="check-mark">✓</div>Account details</div>
+            <div class="tag-row">
+              <span class="tag">FORMAT: JSON + CSV</span>
+              <span class="tag">DELIVERY: EMAIL LINK</span>
+            </div>
+          </div>
+          <div class="btn-footer"><button class="btn btn-teal" onclick="go(11)">Request my data</button></div>
+        </div>
+
+        <!-- SCREEN 11: REQUEST CONFIRMED -->
+        <div class="screen" data-screen="11">
+          <div class="scr-body center-flow">
+            <div class="big-icon teal" style="font-size:30px;">⏱</div>
+            <h2 class="scr-title">Request received</h2>
+            <p class="scr-sub">We'll email a secure download link within 72 hours. Track this under Privacy Center → Download my data.</p>
+          </div>
+          <div class="btn-footer"><button class="btn btn-black" onclick="go(7)">Back to Privacy Center</button></div>
+        </div>
+
+        <div class="toast" id="toast">Preferences updated</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;">
+      <button onclick="restart()" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 14px;border-radius:8px;border:1px solid var(--gray-3);background:white;cursor:pointer;color:var(--gray-1);">↺ RESTART FLOW</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: current screen notes -->
+  <div class="side" id="rightNotes">
+    <h3>This screen</h3>
+    <div id="noteBody" style="font-size:12.5px;color:var(--gray-1);line-height:1.6;"></div>
+  </div>
+</div>
+
+<script>
+const SCREENS = [
+  {id:1, label:"Sign up", note:"Standard entry point — nothing DPDP-specific yet, but the footer line already signals granular consent is coming next."},
+  {id:2, label:"Verify OTP", note:"Unchanged from today's Uber. Included for flow realism."},
+  {id:3, label:"Consent screen", note:"The core moment. Essential data is locked ON (can't be toggled). Every optional use has its own toggle, default OFF except the safety-adjacent one. Tap any toggle to try it."},
+  {id:4, label:"Consent confirmed", note:"Closes the loop — tells the user their choices were saved and exactly where to revisit them."},
+  {id:5, label:"Home", note:"Normal booking screen. Tap the avatar (top-left) to open the profile menu."},
+  {id:6, label:"Profile menu", note:"Privacy Center is a top-level item with a small dot badge — not buried three menus deep like today."},
+  {id:7, label:"Privacy Center", note:"The self-serve hub. From here a user can see what's collected, change consent, or request their data — no support ticket needed."},
+  {id:8, label:"Data collected (branch)", note:"Plain-language breakdown of what's stored, grouped by category, each with a retention tag."},
+  {id:9, label:"Manage consent (branch)", note:"Same toggles as signup, but editable anytime. Tap 'Save changes' to see the confirmation toast."},
+  {id:10, label:"Download my data", note:"The DSAR (data access request) flow — pre-checked categories, clear turnaround time."},
+  {id:11, label:"Request confirmed", note:"Confirms the request and routes back into Privacy Center, reinforcing it as the permanent home for data rights."},
+];
+
+const legend = document.getElementById('legend');
+const listEl = document.getElementById('screenList');
+SCREENS.forEach(s=>{
+  const tag = document.createElement('span');
+  tag.textContent = s.id + '·' + s.label;
+  tag.id = 'leg-'+s.id;
+  legend.appendChild(tag);
+
+  const row = document.createElement('div');
+  row.className = 'side-item';
+  row.id = 'row-'+s.id;
+  row.innerHTML = '<div class="side-num">'+String(s.id).padStart(2,'0')+'</div><div>'+s.label+'</div>';
+  row.style.cursor='pointer';
+  row.onclick = ()=>go(s.id);
+  listEl.appendChild(row);
+});
+
+function go(n){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('show'));
+  document.querySelector('.screen[data-screen="'+n+'"]').classList.add('show');
+  document.getElementById('screenArea').scrollTop = 0;
+  const active = document.querySelector('.screen[data-screen="'+n+'"] .scr-body');
+  if(active) active.scrollTop = 0;
+
+  document.querySelectorAll('.flow-legend span').forEach(el=>el.classList.remove('active'));
+  const leg = document.getElementById('leg-'+n); if(leg) leg.classList.add('active');
+
+  document.querySelectorAll('.side-item').forEach(el=>el.classList.remove('current'));
+  const row = document.getElementById('row-'+n); if(row) row.classList.add('current');
+
+  const s = SCREENS.find(s=>s.id===n);
+  document.getElementById('noteBody').textContent = s ? s.note : '';
+}
+
+function saveConsent(){
+  const toast = document.getElementById('toast');
+  toast.textContent = 'Preferences updated';
+  toast.classList.add('show');
+  setTimeout(()=>{ toast.classList.remove('show'); go(7); }, 900);
+}
+
+function restart(){ go(1); }
+
+go(1);
+</script>
+</body>
+</html>
